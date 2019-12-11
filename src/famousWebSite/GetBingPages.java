@@ -19,10 +19,9 @@ import okhttp3.Response;
 
 public class GetBingPages {
 	private final static String userAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.87 Safari/537.36";
-	private final static String fileDirAddr = "C:\\Users\\DaiQing\\Pictures\\bing\\";
-	private final static String BingUrl = "http://cn.bing.com/";
-
-	// get web page
+	private final static String fileDirAddr = "C:\\Users\\DaiQing\\Pictures\\bings\\";
+	
+	//get web page
 	public static String getHtml(String url) throws IOException, InterruptedException {
 		String html = null;
 		OkHttpClient client = new OkHttpClient();
@@ -32,14 +31,14 @@ public class GetBingPages {
 			try {
 				response = client.newCall(request).execute();
 				Pattern pattern = Pattern.compile("CMCCWLANFORM");
-				html = response.body().string();
+				html = response.body().string();	
 				Matcher matcher = pattern.matcher(html);
 				if (matcher.find())
 					throw new Exception();
 			} catch (Exception e) {
 				// sleep 3 minutes
 				System.out.println("i'm going to sleep");
-				// Thread.sleep(1000 * 60 * 3);
+//				Thread.sleep(1000 * 60 * 3);
 				Thread.sleep(1000 * 3);
 				continue;
 			}
@@ -48,14 +47,15 @@ public class GetBingPages {
 		}
 		if (!response.isSuccessful())
 			System.out.println("Network error");
-		// System.out.println(Jsoup.parse(html));
+//		System.out.println(Jsoup.parse(html));
 		return html;
 	}
 
-	// get image name
+	//get image name
 	public static String getFileName(Document doc) throws Exception {
 		String fileNameTmp = "";
 		String fileName = "";
+//		System.out.println(doc.body().toString());
 		Pattern pTitle = Pattern.compile("<a id=\"sh_cp\" class=\"sc_light\" title=\"(.*)\" a");
 		Matcher mTitle = pTitle.matcher(doc.body().toString());
 		if (mTitle.find()) {
@@ -75,7 +75,7 @@ public class GetBingPages {
 		return fileName;
 	}
 
-	// check file is downloaded or not
+	//check file is downloaded or not
 	private static boolean checkFileExist(String fileName) {
 		File file = new File(fileDirAddr + fileName + ".jpg");
 		if (file.exists()) {
@@ -85,21 +85,12 @@ public class GetBingPages {
 		return false;
 	}
 
-	// use url to download
-	/**
-	 * 
-	 * @param doc
-	 * @param imageUrl
-	 * @param fileName
-	 * @return
-	 * @throws Exception
-	 */
+	//use url to download
 	private static String downloadJpg(Document doc, String imageUrl, String fileName) throws Exception {
 		Pattern p = Pattern.compile("background-image:url\\((.*\\.jpg)");
 		Matcher m = p.matcher(doc.toString());
 		if (m.find()) {
 			imageUrl += m.group(1);
-			System.out.println(imageUrl);
 			// downloading......
 			try {
 				download(imageUrl, fileDirAddr + fileName + ".jpg");
@@ -109,7 +100,7 @@ public class GetBingPages {
 			}
 			return imageUrl;
 		}
-		throw new Exception("get imageUrl error, download failed.");
+		throw new Exception("get imageUrl error");
 	}
 
 	private static void downLoadVideo(Document doc, String imageUrl, String fileName) throws Exception {
@@ -122,14 +113,14 @@ public class GetBingPages {
 
 			// downloading......
 			try {
-				// System.out.println("video downloading 1");
-				// System.out.println("image url:" + imageUrl);
+//				System.out.println("video downloading 1");
+//				 System.out.println("image url:" + imageUrl);
 				String videoUrl = "";
 				for (int i = 0; i < imageUrl.length(); ++i) {
 					if (imageUrl.charAt(i) != '\\')
 						videoUrl += imageUrl.charAt(i);
 				}
-				// System.out.println("videoUrl url:" + videoUrl);
+//				System.out.println("videoUrl url:" + videoUrl);
 				download(videoUrl, fileDirAddr + fileName + ".mp4");
 			} catch (Exception e) {
 				String tmp = m.group(4).toString();
@@ -138,17 +129,16 @@ public class GetBingPages {
 					if (tmp.charAt(i) != '\\')
 						videoUrl += tmp.charAt(i);
 				}
-				// System.out.println("catch video exception try video downloading again");
-				// System.out.println("videoUrl url:" + "http:" + videoUrl);
+//				System.out.println("catch video exception try video downloading again");
+//				System.out.println("videoUrl url:" + "http:" + videoUrl);
 				// the mp4 is not in the bing server
 				download("http:" + videoUrl, fileDirAddr + fileName + ".mp4");
 			}
-		} else {
-			System.out.println("the video do not exist");
-		}
+		} else
+			throw new Exception("the video do not exist");
 	}
 
-	// get Url and Download download video
+	//get Url and Download download video
 	public static String getImageUrl(String html) throws Exception {
 		String imageUrl = "http://cn.bing.com";
 		Document doc = Jsoup.parse(html);
@@ -159,12 +149,13 @@ public class GetBingPages {
 			downLoadVideo(doc, imageUrl, fileName);
 		} catch (Exception e) {
 			e.printStackTrace();
-		} finally {
+		}finally {
 			return downloadJpg(doc, imageUrl, fileName);
 		}
-	}
 
-	// download image
+	}
+	
+	//download image
 	public static void download(String urlString, String filename) throws Exception {
 		URL url = new URL(urlString);
 		URLConnection con = url.openConnection();
